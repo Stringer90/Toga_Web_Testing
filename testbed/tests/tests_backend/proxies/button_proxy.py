@@ -3,6 +3,7 @@
 from ..page_singleton import PageSingleton
 from playwright.sync_api import expect
 import asyncio
+from concurrent.futures import Future
 
 class ButtonProxy:
     def __init__(self):
@@ -31,7 +32,11 @@ class ButtonProxy:
             )
             return await page.evaluate("(code) => window.test_cmd(code)", code)
         
-        return LoopBridge.run_sync(_get())
+        #loop = asyncio.get_event_loop()
+        #loop = asyncio.get_running_loop()
+
+        future = asyncio.run_coroutine_threadsafe(_get(), loop)
+        return future.result()
     
     @text.setter
     def text(self, value: str | None) -> None:
@@ -60,7 +65,6 @@ class ButtonProxy:
         loop = asyncio.get_event_loop()
         loop.create_task(self._set_text(code))
 
-    
     async def _set_text(self, code):
         page = await PageSingleton.get()
         await page.evaluate("(code) => window.test_cmd(code)", code)
@@ -93,12 +97,4 @@ class ButtonProxy:
 
         await page.evaluate("(code) => window.test_cmd(code)", code)
 
-class LoopBridge:
-    @staticmethod
-    def run_sync(coro):
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-        else:
-            return loop.run_until_complete(coro)
+
