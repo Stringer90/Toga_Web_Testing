@@ -9,6 +9,7 @@ class ButtonProxy:
         self.id = self.setup()
         self.add_self_to_main_window()
 
+    """
     @property
     async def text(self):
         page = await PageSingleton.get()
@@ -19,6 +20,18 @@ class ButtonProxy:
 
         result = await page.evaluate("(code) => window.test_cmd(code)", code)
         return result
+    """
+    @property
+    def text(self):
+        async def _get():
+            page = await PageSingleton.get()
+
+            code = (
+                f"result = self.my_widgets['{self.id}'].text"
+            )
+            return await page.evaluate("(code) => window.test_cmd(code)", code)
+        
+        return LoopBridge.run_sync(_get())
     
     @text.setter
     def text(self, value: str | None) -> None:
@@ -79,3 +92,13 @@ class ButtonProxy:
         )
 
         await page.evaluate("(code) => window.test_cmd(code)", code)
+
+class LoopBridge:
+    @staticmethod
+    def run_sync(coro):
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+        else:
+            return loop.run_until_complete(coro)
