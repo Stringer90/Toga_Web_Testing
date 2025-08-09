@@ -2,6 +2,7 @@
 #Sync version
 from ..page_singleton import PageSingleton
 from playwright.sync_api import expect
+import asyncio
 
 class ButtonProxy:
     def __init__(self):
@@ -9,35 +10,50 @@ class ButtonProxy:
         self.add_self_to_main_window()
 
     @property
-    def text(self):
-        page = PageSingleton.get()
+    async def text(self):
+        page = await PageSingleton.get()
 
         code = (
             f"result = self.my_widgets['{self.id}'].text"
         )
 
-        result = page.evaluate("(code) => window.test_cmd(code)", code)
+        result = await page.evaluate("(code) => window.test_cmd(code)", code)
         return result
     
     @text.setter
     def text(self, value: str | None) -> None:
         
-        # From core/button.py. Probably not needed yet
-        #if value is None or value == "\u200b":
-        #    value = ""
-        #else:
-        #    value = str(value).split("\n")[0]
+        #From core/button.py. Probably not needed yet
+        """
+        if value is None or value == "\u200b":
+            value = ""
+        else:
+            value = str(value).split("\n")[0]
+        """
         
+        """
         page = PageSingleton.get()
 
         code = (
             f"self.my_widgets['{self.id}'].text = '{value}'"
         )
 
-        page.evaluate("(code) => window.test_cmd(code)", code)
+        await page.evaluate("(code) => window.test_cmd(code)", code)
+        """
+
+        code = (
+            f"self.my_widgets['{self.id}'].text = '{value}'"
+        )
+        loop = asyncio.get_event_loop()
+        loop.create_task(self._set_text(code))
+
     
-    def setup(self):
-        page = PageSingleton.get()
+    async def _set_text(self, code):
+        page = await PageSingleton.get()
+        await page.evaluate("(code) => window.test_cmd(code)", code)
+    
+    async def setup(self):
+        page = await PageSingleton.get()
 
         code = (
             "new_widget = toga.Button('Hello')\n"
@@ -45,21 +61,21 @@ class ButtonProxy:
             "result = new_widget.id"
         )
 
-        result = page.evaluate("(code) => window.test_cmd(code)", code)
+        result = await page.evaluate("(code) => window.test_cmd(code)", code)
 
         return result # ID of the widget in the remote web app
         
-    def add_self_to_main_window(self):
+    async def add_self_to_main_window(self):
 
         #- This method is for prototyping purposes only.
         #- Adding to main_window should be done in the probe fixture.
         #- This would require making a proxy for app, main_window and box, 
         #which has to be a ble to handle and child widgets at time of creation
 
-        page = PageSingleton.get()
+        page = await PageSingleton.get()
 
         code = (
             f"self.main_window.content.add(self.my_widgets['{self.id}'])"
         )
 
-        page.evaluate("(code) => window.test_cmd(code)", code)
+        await page.evaluate("(code) => window.test_cmd(code)", code)

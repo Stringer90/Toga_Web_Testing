@@ -14,6 +14,31 @@ def widget():
 def probe(widget):
     return ButtonProbe(widget)
 
+
+# Test Async version
+async def test_text_change(widget, probe):
+    #widget = ButtonProxy()
+    #probe = ButtonProbe(widget)
+
+    #print(f"widget id: {widget.id}")
+    #print(f"widget text: {widget.text}")
+
+    #print(f"probe text: {probe.text}")
+
+    widget.text = "new text"
+    #print("changed widget text to 'new text'")
+
+    #widget_text = widget.text
+    #probe_text = probe.text
+
+    #print(f"widget text: {widget.text}")
+    #print(f"probe text: {probe.text}")
+    widget_text = await widget.text
+    assert widget_text == "new text"
+
+
+# Test Sync version
+""" 
 def test_text_change(widget, probe):
     #widget = ButtonProxy()
     #probe = ButtonProbe(widget)
@@ -33,6 +58,6 @@ def test_text_change(widget, probe):
     print(f"probe text: {probe.text}")
 
     assert widget_text == probe_text
-
+"""
 
 

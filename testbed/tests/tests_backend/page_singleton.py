@@ -1,6 +1,7 @@
 # Singleton to hold page object
 
 # Sync version
+"""
 from playwright.sync_api import sync_playwright
 
 class PageSingleton:
@@ -37,10 +38,10 @@ class PageSingleton:
             cls._browser = None
             cls._playwright = None
             cls._page = None
-
+"""
 
 # Async version
-"""
+
 import asyncio
 from playwright.async_api import async_playwright
 
@@ -77,4 +78,4 @@ class PageSingleton:
             cls._playwright = None
             cls._browser = None
             cls._page = None
-"""
+

@@ -3,5 +3,5 @@
 
 # Uncomment below if using async.
 
-#[tool.pytest.ini_options]
-#asyncio_mode = "auto"
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
