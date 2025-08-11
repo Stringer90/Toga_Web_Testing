@@ -1,6 +1,6 @@
 # Handled differently in real testing with get_module()
-from tests_backend.widgets.button import ButtonProbe
-from tests_backend.proxies.button_proxy import ButtonProxy
+from ..tests_backend.widgets.button import ButtonProbe
+from ..tests_backend.proxies.button_proxy import ButtonProxy
 
 from pytest import fixture
 
@@ -9,10 +9,6 @@ from pytest import fixture
 @fixture
 def widget():
     return ButtonProxy()
-
-@fixture
-def probe(widget):
-    return ButtonProbe(widget)
 
 def test_text_change(widget, probe):
     #widget = ButtonProxy()
