@@ -33,7 +33,7 @@ async def test_text_change(widget, probe):
 
     #print(f"widget text: {widget.text}")
     #print(f"probe text: {probe.text}")
-    widget_text = await widget.text
+    widget_text = widget.text
     assert widget_text == "new text"
 
 

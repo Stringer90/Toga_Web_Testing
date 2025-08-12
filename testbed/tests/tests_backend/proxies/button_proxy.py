@@ -24,7 +24,7 @@ class ButtonProxy:
     """
     @property
     def text(self):
-        async def _get():
+        async def _get(self):
             page = await PageSingleton.get()
 
             code = (
@@ -32,11 +32,14 @@ class ButtonProxy:
             )
             return await page.evaluate("(code) => window.test_cmd(code)", code)
         
-        #loop = asyncio.get_event_loop()
+        #loop = asyncio.get_current_loop()
+        loop = asyncio.get_event_loop()
         #loop = asyncio.get_running_loop()
 
-        future = asyncio.run_coroutine_threadsafe(_get(), loop)
-        return future.result()
+        return loop.run_until_complete(_get())
+
+        #future = asyncio.run_coroutine_threadsafe(_get(), loop)
+        #return future.result()
     
     @text.setter
     def text(self, value: str | None) -> None:
@@ -59,17 +62,31 @@ class ButtonProxy:
         await page.evaluate("(code) => window.test_cmd(code)", code)
         """
 
+        async def _set(self, code):
+            page = await PageSingleton.get()
+            await page.evaluate("(code) => window.test_cmd(code)", code)
+
         code = (
             f"self.my_widgets['{self.id}'].text = '{value}'"
         )
-        loop = asyncio.get_event_loop()
-        loop.create_task(self._set_text(code))
 
+        #loop = asyncio.get_current_loop()
+        loop = asyncio.get_event_loop()
+        #loop = asyncio.get_running_loop()
+
+        loop.run_until_complete(_set(self, code))
+
+        #loop = asyncio.get_event_loop()
+        #loop.create_task(self._set_text(code))
+
+    """
     async def _set_text(self, code):
         page = await PageSingleton.get()
         await page.evaluate("(code) => window.test_cmd(code)", code)
-    
-    async def setup(self):
+    """
+        
+    def setup(self):
+        """
         page = await PageSingleton.get()
 
         code = (
@@ -81,14 +98,34 @@ class ButtonProxy:
         result = await page.evaluate("(code) => window.test_cmd(code)", code)
 
         return result # ID of the widget in the remote web app
+        """
+
+        async def _setup(self):
+            page = await PageSingleton.get()
+            code = (
+                "new_widget = toga.Button('Hello')\n"
+                "self.my_widgets[new_widget.id] = new_widget\n"
+                "result = new_widget.id"
+            )
+            result = await page.evaluate("(code) => window.test_cmd(code)", code)
+            return result # ID of the widget in the remote web app
+
+        #loop = asyncio.get_current_loop()
+        loop = asyncio.get_event_loop()
+        #loop = asyncio.get_running_loop()
+
+        loop.run_until_complete(_setup(self))
+
+
         
-    async def add_self_to_main_window(self):
+    def add_self_to_main_window(self):
 
         #- This method is for prototyping purposes only.
         #- Adding to main_window should be done in the probe fixture.
         #- This would require making a proxy for app, main_window and box, 
         #which has to be a ble to handle and child widgets at time of creation
 
+        """
         page = await PageSingleton.get()
 
         code = (
@@ -96,5 +133,20 @@ class ButtonProxy:
         )
 
         await page.evaluate("(code) => window.test_cmd(code)", code)
+        """
+
+        async def _add_self(self):
+            page = await PageSingleton.get()
+            code = (
+                f"self.main_window.content.add(self.my_widgets['{self.id}'])"
+            )
+            result = await page.evaluate("(code) => window.test_cmd(code)", code)
+            return result # ID of the widget in the remote web app
+
+        #loop = asyncio.get_current_loop()
+        loop = asyncio.get_event_loop()
+        #loop = asyncio.get_running_loop()
+
+        loop.run_until_complete(_add_self(self))
 
 
