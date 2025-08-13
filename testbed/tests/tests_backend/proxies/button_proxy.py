@@ -1,13 +1,21 @@
 
 #Sync version
+import json
 from ..page_singleton import PageSingleton
 from playwright.sync_api import expect
 
 class ButtonProxy:
     def __init__(self):
-        self.id = self.setup()
+        object.__setattr__(self, "_inited", False)
+
+        button_id = self.setup()
+        object.__setattr__(self, "id", button_id)
+
         self.add_self_to_main_window()
 
+        object.__setattr__(self, "_inited", True)
+
+    """
     @property
     def text(self):
         page = PageSingleton.get()
@@ -18,7 +26,9 @@ class ButtonProxy:
 
         result = page.evaluate("(code) => window.test_cmd(code)", code)
         return result
-    
+    """
+
+    """
     @text.setter
     def text(self, value: str | None) -> None:
         
@@ -35,7 +45,27 @@ class ButtonProxy:
         )
 
         page.evaluate("(code) => window.test_cmd(code)", code)
+    """
     
+    def __setattr__(self, name, value):
+        page = PageSingleton.get()
+        widget_id = object.__getattribute__(self, "id")
+        js_value = json.dumps(value)
+
+        code = f"self.my_widgets['{widget_id}'].{name} = {js_value}"
+        page.evaluate("(code) => window.test_cmd(code)", code)
+
+    def __getattr__(self, name):
+        page = PageSingleton.get()
+
+        code = (
+            f"result = self.my_widgets['{self.id}'].{name}"
+        )
+
+        result = page.evaluate("(code) => window.test_cmd(code)", code)
+        return result
+
+
     def setup(self):
         page = PageSingleton.get()
 

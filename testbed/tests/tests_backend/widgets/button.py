@@ -11,9 +11,27 @@ Potential Improvements (more research/testing needed):
 
 class ButtonProbe:
     def __init__(self, widget):
-        self.id = widget.id
-        self.dom_id = f"toga_{self.id}"
+        object.__setattr__(self, "id", widget.id)
+        object.__setattr__(self, "dom_id", f"toga_{widget.id}")
 
+    def _locator(self):
+        page = PageSingleton.get()
+        return page.locator(f"#{self.dom_id}")
+
+    def __getattr__(self, name):
+        locator = self._locator()
+
+        match name:
+            case "text":
+                return locator.inner_text()
+            case "height":
+                box = locator.bounding_box()
+                return None if box is None else box["height"]
+
+        return "No match"
+
+
+    """
     # Separated into 3 lines for readability
     # Sync version
     @property
@@ -21,3 +39,4 @@ class ButtonProbe:
         page = PageSingleton.get()
         button = page.locator(f"#{self.dom_id}")
         return button.inner_text()
+    """
