@@ -1,4 +1,5 @@
-from ..page_singleton import PageSingleton
+#from ..page_singleton import PageSingleton, BackgroundPage
+from ..page_singleton import BackgroundPage
 #from beeware_web_testing.web.tests_backend.page_singleton import PageSingleton
 
 """
@@ -18,6 +19,15 @@ class ButtonProbe:
     # Sync version
     @property
     def text(self):
+
+        """
         page = PageSingleton.get()
         button = page.locator(f"#{self.dom_id}")
         return button.inner_text()
+        """
+        w = BackgroundPage.get()
+        return w.run_coro(lambda page: page.locator(f"#{self.dom_id}").inner_text())
+
+
+
+
