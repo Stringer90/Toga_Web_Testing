@@ -1,32 +1,37 @@
-#from ..page_singleton import PageSingleton, BackgroundPage
 from ..page_singleton import BackgroundPage
-#from beeware_web_testing.web.tests_backend.page_singleton import PageSingleton
-
-"""
-Potential Improvements (more research/testing needed):
-- Have the page singleton instance a class variable, so don't need to call get() in every method.
-- In __init__, locate the button and store the located element as a class variable,
-  ie 'self.button = page.locator(f"#{self.dom_id}")'.
-  Won't need to keep locating it.
-"""
 
 class ButtonProbe:
     def __init__(self, widget):
-        self.id = widget.id
-        self.dom_id = f"toga_{self.id}"
+        object.__setattr__(self, "id", widget.id)
+        object.__setattr__(self, "dom_id", f"toga_{widget.id}")
 
-    # Separated into 3 lines for readability
-    # Sync version
-    @property
-    def text(self):
+    def __getattr__(self, name):
+        page = BackgroundPage.get()
 
+        match name:
+            case "text":
+                return page.run_coro(lambda page: page.locator(f"#{self.dom_id}").inner_text())
+            case "height":
+                box = page.run_coro(lambda page: page.locator(f"#{self.dom_id}").bounding_box())
+                return None if box is None else box["height"]
+    
+        return "No match"
+        #raise AttributeError(name)
+
+        """ ALTERNATIVE METHOD - Keep just in case
+        sel = f"#{self.dom_id}"
+
+        if name == "text":
+            async def _text(page):
+                return await page.locator(sel).inner_text()
+            return w.run_coro(_text)
+
+        if name == "height":
+            async def _height(page):
+                box = await page.locator(sel).bounding_box()
+                return None if box is None else box["height"]
+            return w.run_coro(_height)
         """
-        page = PageSingleton.get()
-        button = page.locator(f"#{self.dom_id}")
-        return button.inner_text()
-        """
-        w = BackgroundPage.get()
-        return w.run_coro(lambda page: page.locator(f"#{self.dom_id}").inner_text())
 
 
 

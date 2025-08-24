@@ -2,9 +2,7 @@
 from tests_backend.widgets.button import ButtonProbe
 from tests_backend.proxies.button_proxy import ButtonProxy
 
-from pytest import fixture
-
-# will need to have to work as async - ie dealing with asyncio event loops
+from pytest import approx, fixture
 
 @fixture
 def widget():
@@ -14,50 +12,24 @@ def widget():
 def probe(widget):
     return ButtonProbe(widget)
 
-
-# Test Async version
 async def test_text_change(widget, probe):
-    #widget = ButtonProxy()
-    #probe = ButtonProbe(widget)
-
-    #print(f"widget id: {widget.id}")
-    #print(f"widget text: {widget.text}")
-
-    #print(f"probe text: {probe.text}")
+    initial_height = probe.height
 
     widget.text = "new text"
-    #print("changed widget text to 'new text'")
 
-    #widget_text = widget.text
-    #probe_text = probe.text
+    assert isinstance(widget.text, str)
+    expected = str("new text").split("\n")[0]
 
-    #print(f"widget text: {widget.text}")
-    #print(f"probe text: {probe.text}")
-    widget_text = widget.text
-    assert widget_text == "new text"
+    assert widget.text == expected
+    assert probe.text == expected
 
+    assert probe.height == approx(initial_height, abs=1)
 
-# Test Sync version
-""" 
-def test_text_change(widget, probe):
-    #widget = ButtonProxy()
-    #probe = ButtonProbe(widget)
+# Second async test method to check that no errors occur
+async def test_text_change2():
+    widget = ButtonProxy()
+    probe = ButtonProbe(widget)
+    widget.text = "new text2"
+    assert widget.text == probe.text
 
-    print(f"widget id: {widget.id}")
-    print(f"widget text: {widget.text}")
-
-    print(f"probe text: {probe.text}")
-
-    widget.text = "new text"
-    print("changed widget text to 'new text'")
-
-    widget_text = widget.text
-    probe_text = probe.text
-
-    print(f"widget text: {widget.text}")
-    print(f"probe text: {probe.text}")
-
-    assert widget_text == probe_text
-"""
-
-
+    
