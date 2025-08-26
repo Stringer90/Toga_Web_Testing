@@ -1,5 +1,4 @@
 import asyncio, threading
-from typing import Any, Optional
 from playwright.async_api import async_playwright
 
 class BackgroundPage:
@@ -13,7 +12,7 @@ class BackgroundPage:
         return cls._inst
 
     @classmethod
-    def get(cls) -> "BackgroundPage":
+    def get(cls):
         return cls()
 
     def __init__(self):
@@ -21,25 +20,18 @@ class BackgroundPage:
             return
         self._init = True
         self._ready = threading.Event()
-        self._bootstrap_err: Optional[Exception] = None
-        self._loop: asyncio.AbstractEventLoop | None = None
+        self._loop = None
         self._thread = threading.Thread(target=self._run, name="PageLoop", daemon=True)
         self._thread.start()
         self._ready.wait()
-        if self._bootstrap_err is not None:
-            raise RuntimeError(f"BackgroundPage failed to initialize: {self._bootstrap_err}") from self._bootstrap_err
 
-    def eval_js(self, js: str, *args, timeout: Optional[float] = None) -> Any:
-        if self._bootstrap_err is not None:
-            raise RuntimeError(f"BackgroundPage not usable: {self._bootstrap_err}") from self._bootstrap_err
+    def eval_js(self, js, *args):
         fut = asyncio.run_coroutine_threadsafe(self._eval(js, *args), self._loop)
-        return fut.result(timeout=timeout)
+        return fut.result()
 
-    async def eval_js_async(self, js: str, *args, timeout: Optional[float] = None) -> Any:
-        if self._bootstrap_err is not None:
-            raise RuntimeError(f"BackgroundPage not usable: {self._bootstrap_err}") from self._bootstrap_err
+    async def eval_js_async(self, js, *args):
         fut = asyncio.run_coroutine_threadsafe(self._eval(js, *args), self._loop)
-        return await asyncio.wait_for(asyncio.wrap_future(fut), timeout=timeout)
+        return await asyncio.wait_for(asyncio.wrap_future(fut))
 
     def _run(self):
         self._loop = asyncio.new_event_loop()
@@ -63,28 +55,26 @@ class BackgroundPage:
 
             self._alock = asyncio.Lock()
         except Exception as e:
-            self._bootstrap_err = e
             self._alock = asyncio.Lock()
         finally:
             self._ready.set()
 
-    async def _eval(self, js: str, *args):
+    async def _eval(self, js, *args):
         async with self._alock:
             return await self._page.evaluate(js, *args)
 
-    def run_coro(self, coro_fn, *args, timeout=None, **kwargs):
+    def run_coro(self, coro_fn, *args, **kwargs):
         async def _runner():
             async with self._alock:
                 return await coro_fn(self._page, *args, **kwargs)
 
         fut = asyncio.run_coroutine_threadsafe(_runner(), self._loop)
-        return fut.result(timeout=timeout)
+        return fut.result()
 
-    async def run_coro_async(self, coro_fn, *args, timeout=None, **kwargs):
+    async def run_coro_async(self, coro_fn, *args, **kwargs):
         async def _runner():
             async with self._alock:
                 return await coro_fn(self._page, *args, **kwargs)
 
         fut = asyncio.run_coroutine_threadsafe(_runner(), self._loop)
-        return await asyncio.wait_for(asyncio.wrap_future(fut), timeout=timeout)
-
+        return await asyncio.wait_for(asyncio.wrap_future(fut))
