@@ -1,14 +1,15 @@
 #from pytest import fixture, register_assert_rewrite, skip
 #import toga
 
-""" TODO: Proxy for Toga App
-@fixture(scope="session")
-def app():
-    return toga.App.app
-"""
+import pytest
+from .tests_backend.proxies.app_proxy import AppProxy
 
-""" TODO: Proxy for main_window
-@fixture(scope="session")
+@pytest.fixture(scope="session")
+def app():
+    # just return AppProxy
+    return AppProxy()
+
+@pytest.fixture(scope="session")
 def main_window(app):
+    # return main window created by app proxy
     return app.main_window
-"""
