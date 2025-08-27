@@ -8,8 +8,6 @@ class ButtonProxy:
         button_id = self.setup()
         object.__setattr__(self, "id", button_id)
 
-        self.add_self_to_main_window()
-
         object.__setattr__(self, "_inited", True)
     
     def __setattr__(self, name, value):
