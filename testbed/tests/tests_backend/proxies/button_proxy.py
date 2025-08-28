@@ -13,12 +13,30 @@ class ButtonProxy:
     def __setattr__(self, name, value):
         page = BackgroundPage.get()
         widget_id = object.__getattribute__(self, "id")
-        js_value = json.dumps(value)
 
-        code = (
-            f"self.my_widgets['{widget_id}'].{name} = {js_value}"
-        )
-        #f"self.my_widgets[{self.id!r}].text = {value!r}\n"
+        # METHOD 1 (working)
+        
+        literal = repr(str(value)) if not isinstance(value, (int, float, bool, type(None))) else repr(value)
+        
+        # METHOD 2 (working)
+        """
+        try:
+            literal = json.dumps(value)
+        except TypeError:
+            literal = json.dumps(str(value))
+        """
+        # METHOD 3 (working)
+        """
+        if name == "text":
+            literal = repr(str(value))
+        else:
+            try:
+                literal = json.dumps(value)
+            except TypeError:
+                literal = repr(value)
+        """
+
+        code = f"self.my_widgets[{widget_id!r}].{name} = {literal}"
         page.eval_js("(code) => window.test_cmd(code)", code)
 
     def __getattr__(self, name):
@@ -38,12 +56,5 @@ class ButtonProxy:
             "result = new_widget.id"
         )
         return page.eval_js("(code) => window.test_cmd(code)", code)
-
-    def add_self_to_main_window(self):
-        page = BackgroundPage.get()
-        code = (
-            f"self.main_window.content.add(self.my_widgets['{self.id}'])"
-        )
-        page.eval_js("(code) => window.test_cmd(code)", code)
 
 

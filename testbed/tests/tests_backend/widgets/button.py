@@ -10,7 +10,8 @@ class ButtonProbe:
 
         match name:
             case "text":
-                return page.run_coro(lambda page: page.locator(f"#{self.dom_id}").inner_text())
+                # was inner_text, but it trims leading/trailing spaces and removes only whitespace.
+                return page.run_coro(lambda page: page.locator(f"#{self.dom_id}").text_content())
             case "height":
                 box = page.run_coro(lambda page: page.locator(f"#{self.dom_id}").bounding_box())
                 return None if box is None else box["height"]
